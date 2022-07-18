@@ -17,6 +17,13 @@ class Graph {
   }
 
   acquireToken(code) {
+    const params = {
+      client_id: process.env.APP_ID,
+      client_secret: process.env.APP_SECRET,
+      redirect_uri: process.env.REDIRECT_URI,
+      code: code,
+    };
+    console.log(params);
     axios.get(`https://${this.base}/${this.version}/oauth/access_token`, {
       params: {
         client_id: process.env.APP_ID,
@@ -31,7 +38,7 @@ class Graph {
     });
   }
 
-  getCommunityMembers() {
+  getCommunityMembers(main_res) {
     console.log('Getting community members');
     axios.get(`https://${this.base}/${this.version}/community/members`, {
       params: Object.assign(this.getProof(), {
@@ -39,34 +46,46 @@ class Graph {
       }),
     }).then(res => {
       console.log('Members acquired');
-      for (field in res) {
+      for (let field in res) {
         console.log(field);
       }
-      res.render('members', {members: res.data});
+      console.log(res.data.data);
+      let membs = []
+      for (let user of res.data.data) {
+        console.log(user);
+        membs.push(user['name']);
+      }
+      console.log(membs);
+      main_res.status(200).render('members', {members: membs});
     }).catch(err => {
       console.log(err);
+      main_res.status(400).send();
     });
   }
 
-  getInstallConfirmation() {
+  getMe(main_res) {
     console.log('Getting install confirm');
-    axios.get(`https://${this.base}/${this.version}/community`, {
+    axios.get(`https://${this.base}/${this.version}/me`, {
       params: Object.assign(this.getProof(), {
         access_token: this.accessToken,
-        fields: 'install'
       }),
     }).then(res => {
-      console.log('Install confirmation');
-      for (field in res) {
+      console.log('Me');
+      for (let field in res) {
         console.log(field);
       }
-      res.render('installinfo', {type: res.data.install_type, appid: res.data.id});
+      main_res.status(200).render('me', {name: res.data.name});
     }).catch(err => {
       console.log(err);
+      main_res.status(400).send();
     });
   }
 
   getProof() {
+    if (this.accessToken === undefined) {
+      return {};
+    }
+
     const appsecretTime = Math.floor(Date.now() / 1000) - 5;
     const appsecretProof = crypto
       .createHmac('sha256', process.env.APP_SECRET)
@@ -91,17 +110,16 @@ app.use('/community_install', (req, res) => {
   return res.status(200).send('Success!');
 })
 
-app.use('/community_members', (req, res) => {
-  graph.getCommunityMembers();
-  return res.status(200);
+app.get('/community_members', (req, res) => {
+  graph.getCommunityMembers(res);
 })
 
-app.use('/install_confirm', (req, res) => {
-  graph.getInstallConfirmation();
-  return res.status(200);
+app.use('/me', (req, res) => {
+  graph.getMe(res);
 })
 
 app.use('/', (req, res) => {
+  console.log('Rendering main site');
   res.render('index');
 })
 
