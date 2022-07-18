@@ -1,0 +1,9 @@
+html
+  head
+    title My Site
+  body
+    h1 Your community members
+    #{members}
+    each member in members
+      p= member
+    a(href="/") go back
