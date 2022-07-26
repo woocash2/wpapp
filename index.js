@@ -45,9 +45,6 @@ class Graph {
       }),
     }).then(res => {
       console.log('Members acquired');
-      for (let field in res) {
-        console.log(field);
-      }
       let membs = []
       for (let user of res.data.data) {
         membs.push(user['name']);
