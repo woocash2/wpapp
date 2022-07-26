@@ -23,7 +23,6 @@ class Graph {
       redirect_uri: process.env.REDIRECT_URI,
       code: code,
     };
-    console.log(params);
     axios.get(`https://${this.base}/${this.version}/oauth/access_token`, {
       params: {
         client_id: process.env.APP_ID,
@@ -49,13 +48,10 @@ class Graph {
       for (let field in res) {
         console.log(field);
       }
-      console.log(res.data.data);
       let membs = []
       for (let user of res.data.data) {
-        console.log(user);
         membs.push(user['name']);
       }
-      console.log(membs);
       main_res.status(200).render('members', {members: membs});
     }).catch(err => {
       console.log(err);
@@ -71,9 +67,6 @@ class Graph {
       }),
     }).then(res => {
       console.log('Me');
-      for (let field in res) {
-        console.log(field);
-      }
       main_res.status(200).render('me', {name: res.data.name});
     }).catch(err => {
       console.log(err);
